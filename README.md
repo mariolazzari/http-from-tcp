@@ -4,6 +4,33 @@
 
 ## HTTP streams
 
+### Welcome
+
+```sh
+mkdir http-from-tcp
+```
+
+```go
+package main
+
+func main() {}
+```
+
+### Startup
+
+```sh
+go mod init github.com/mariolazzari/http-from-tcp
+```
+
+```go
+import "fmt"
+
+func main() {
+	fmt.Println("I hope I get the job!")
+}
+
+```
+
 ### 8 bytes
 
 ```go
@@ -38,11 +65,11 @@ func main() {
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -52,42 +79,48 @@ func main() {
 	}
 	defer f.Close()
 
-	data := make([]byte, 8)
-	curLine := ""
+	str := ""
 
 	for {
+		data := make([]byte, 8)
 		n, err := f.Read(data)
-		if n > 0 {
-			tokens := strings.Split(string(data[:n]), "\n")
-			curLine += tokens[0]
-
-			if len(tokens) == 2 {
-				fmt.Printf("read: %s\n", curLine)
-				curLine = tokens[1]
-			}
-		}
-
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		data = data[:n]
+		if i := bytes.IndexByte(data, '\n'); i != -1 {
+			str += string(data[:i])
+			data = data[i+1:]
+			fmt.Printf("read: %s\n", str)
+			str = ""
+		}
+
+		str += string(data)
+	}
+
+	if len(str) != 0 {
+		fmt.Printf("read: %s\n", str)
 	}
 }
 ```
 
 ### Channel refactor
 
+[State machine](https://developer.mozilla.org/en-US/docs/Glossary/State_machine)
+
 ```go
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -102,35 +135,35 @@ func main() {
 }
 
 func getLinesChannel(f io.ReadCloser) <-chan string {
-	ch := make(chan string)
-	data := make([]byte, 8)
-	curLine := ""
+	out := make(chan string)
+	str := ""
 
 	go func() {
+		defer close(out)
+		defer f.Close()
+
 		for {
+			data := make([]byte, 8)
 			n, err := f.Read(data)
-			if n > 0 {
-				tokens := strings.Split(string(data[:n]), "\n")
-				curLine += tokens[0]
-
-				if len(tokens) == 2 {
-					ch <- curLine
-					curLine = tokens[1]
-				}
-			}
-
 			if err == io.EOF {
-				close(ch)
-				f.Close()
 				break
 			}
-
 			if err != nil {
 				log.Fatal(err)
 			}
+
+			data = data[:n]
+			if i := bytes.IndexByte(data, '\n'); i != -1 {
+				str += string(data[:i])
+				data = data[i+1:]
+				fmt.Printf("read: %s\n", str)
+				str = ""
+			}
+
+			str += string(data)
 		}
 	}()
 
-	return ch
+	return out
 }
 ```

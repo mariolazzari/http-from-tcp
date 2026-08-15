@@ -1,11 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -20,34 +20,34 @@ func main() {
 }
 
 func getLinesChannel(f io.ReadCloser) <-chan string {
-	ch := make(chan string)
-	data := make([]byte, 8)
-	curLine := ""
+	out := make(chan string)
+	str := ""
 
 	go func() {
+		defer close(out)
+		defer f.Close()
+
 		for {
+			data := make([]byte, 8)
 			n, err := f.Read(data)
-			if n > 0 {
-				tokens := strings.Split(string(data[:n]), "\n")
-				curLine += tokens[0]
-
-				if len(tokens) == 2 {
-					ch <- curLine
-					curLine = tokens[1]
-				}
-			}
-
 			if err == io.EOF {
-				close(ch)
-				f.Close()
 				break
 			}
-
 			if err != nil {
 				log.Fatal(err)
 			}
+
+			data = data[:n]
+			if i := bytes.IndexByte(data, '\n'); i != -1 {
+				str += string(data[:i])
+				data = data[i+1:]
+				fmt.Printf("read: %s\n", str)
+				str = ""
+			}
+
+			str += string(data)
 		}
 	}()
 
-	return ch
+	return out
 }
