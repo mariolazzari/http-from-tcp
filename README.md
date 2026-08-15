@@ -1,5 +1,7 @@
 # Http from Tcp
 
+[YouTube](https://www.youtube.com/watch?v=FknTw9bJsXM&t=1042s)
+
 ## HTTP streams
 
 ### 8 bytes
