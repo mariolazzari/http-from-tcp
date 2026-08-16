@@ -326,3 +326,11 @@ curl -X POST -H "Content-Type: application/json" -d '{"flavor":"dark mode"}' htt
 ## Testing
 
 ### Testify
+
+[Table driven tests](https://dave.cheney.net/2019/05/07/prefer-table-driven-tests)
+
+```sh
+mkdir -p ./internal/request
+go get -u github.com/stretchr/testify/assert
+go test ./...
+```
