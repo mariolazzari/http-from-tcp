@@ -298,3 +298,31 @@ func main() {
 	}
 }
 ```
+
+## Requests
+
+### Tcp to Http
+
+```sh
+go run ./cmd/tcplistener | tee /tmp/rawget.http
+curl http://localhost:42069/coffee
+```
+
+### RFCs
+
+[RFC](https://en.wikipedia.org/wiki/Request_for_Comments)
+[9110](https://datatracker.ietf.org/doc/html/rfc9110)
+[9112](https://datatracker.ietf.org/doc/html/rfc9112)
+
+### Http Post
+
+[curl](https://curl.se/)
+
+```sh
+go run ./cmd/tcplistener | tee /tmp/rawget.http
+curl -X POST -H "Content-Type: application/json" -d '{"flavor":"dark mode"}' http://localhost:42069/coffee
+```
+
+## Testing
+
+### Testify
