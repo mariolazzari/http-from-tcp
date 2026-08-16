@@ -172,6 +172,9 @@ func getLinesChannel(f io.ReadCloser) <-chan string {
 
 [Tcp](https://en.wikipedia.org/wiki/Transmission_Control_Protocol)
 [Http3](https://www.cloudflare.com/learning/performance/what-is-http3/)
+[net](https://pkg.go.dev/net#TCPConn)
+[Accept](https://pkg.go.dev/net#Listener.Accept)
+[tee](<https://en.wikipedia.org/wiki/Tee_(command)>)
 
 ### Tcp
 
@@ -241,5 +244,57 @@ func getLinesChannel(f io.ReadCloser) <-chan string {
 	}()
 
 	return out
+}
+```
+
+### Tcp vs Udp
+
+[Udp](https://en.wikipedia.org/wiki/User_Datagram_Protocol)
+[ResolveUDPAddr](https://pkg.go.dev/net#ResolveUDPAddr)
+
+```sh
+go run ./cmd/tcplistener
+nc -v localhost 42069
+go run ./cmd/tcplistener | tee /tmp/tcplistener.txt
+```
+
+```go
+package main
+
+import (
+	"bufio"
+	"log"
+	"net"
+	"os"
+)
+
+func main() {
+	addr, err := net.ResolveUDPAddr("udp", "localhost:42069")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	conn, err := net.DialUDP("udp", nil, addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		print("> ")
+
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		_, err = conn.Write([]byte(line))
+		if err != nil {
+			log.Println(err)
+		}
+	}
 }
 ```
