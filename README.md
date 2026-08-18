@@ -334,3 +334,5 @@ mkdir -p ./internal/request
 go get -u github.com/stretchr/testify/assert
 go test ./...
 ```
+
+## Headers
